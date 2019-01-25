@@ -29,9 +29,12 @@
 
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;
@@ -91,7 +94,7 @@ import java.util.List;
  * is explained below.
  */
 
-@TeleOp(name="Concept: Vuforia Rover Nav", group ="Concept")
+@Autonomous(name="Concept: Vuforia Rover Nav", group ="Concept")
 public class testVuforia extends LinearOpMode {
 
     /*
@@ -127,7 +130,44 @@ public class testVuforia extends LinearOpMode {
      */
     VuforiaLocalizer vuforia;
 
+    DcMotor testMotor;
+    Servo testServo;
+
+    private static double encoderTicksPerRevolution = 1120; //NeveRest 40 have 1120 ppr
+    private static final double pi = 3.1415;
+    private static double wheelDiameter = 4.0; //wheels are 4 inches in diameter
+    private static double wheelGearReduction = 1.0; //gears are in a 1:1 ratio, so no change
+    private static final double wheelEncoderTicksPerInch = ((encoderTicksPerRevolution * wheelGearReduction) / (wheelDiameter * pi));
+
+    public void move(double power, double inches) {
+        if (opModeIsActive()) {
+            int leftTargetPosition = testMotor.getCurrentPosition() + (int) (inches * wheelEncoderTicksPerInch);
+            testMotor.setTargetPosition(leftTargetPosition);
+            testMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            testMotor.setPower(power);
+            testMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            while (opModeIsActive() && testMotor.isBusy()) {
+                telemetry.addData("Ticks", testMotor.getCurrentPosition());
+                telemetry.update();
+            }
+        }
+    }
+
+    public void moveServo(double position) {
+        testServo.setPosition(position);
+        sleep(3000);
+        testServo.setPosition(0);
+    }
+
     @Override public void runOpMode() {
+
+        testServo = hardwareMap.servo.get("servo");
+        testMotor = hardwareMap.dcMotor.get("test");
+
+        testMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        testMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        testServo.setPosition(0);
         /*
          * Configure Vuforia by creating a Parameter object, and passing it to the Vuforia engine.
          * We can pass Vuforia the handle to a camera preview resource (on the RC phone);
@@ -271,15 +311,23 @@ public class testVuforia extends LinearOpMode {
 
         /** Start tracking the data sets we care about. */
         targetsRoverRuckus.activate();
-        while (opModeIsActive()) {
+        while (opModeIsActive() && !targetVisible) {
 
             // check all the trackable target to see which one (if any) is visible.
             targetVisible = false;
             for (VuforiaTrackable trackable : allTrackables) {
                 if (((VuforiaTrackableDefaultListener)trackable.getListener()).isVisible()) {
                     telemetry.addData("Visible Target", trackable.getName());
-                    targetVisible = true;
-
+                    if (trackable.getName().equals("Red-Footprint")) {
+                        move(.75, 12);
+                        moveServo(1);
+                        targetVisible = true;
+                    }
+                    else if (trackable.getName().equals("Front-Craters")) {
+                        move(.5, -12);
+                        moveServo(-1);
+                        targetVisible = true;
+                    }
                     // getUpdatedRobotLocation() will return null if no new information is available since
                     // the last time that call was made, or if the trackable is not currently visible.
                     OpenGLMatrix robotLocationTransform = ((VuforiaTrackableDefaultListener)trackable.getListener()).getUpdatedRobotLocation();

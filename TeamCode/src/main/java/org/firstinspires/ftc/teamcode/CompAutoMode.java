@@ -48,12 +48,14 @@ public class CompAutoMode extends LinearOpMode {
     private static final float mmTargetHeight   = (6) * mmPerInch;          // the height of the center of the target image above the floor
     private static final VuforiaLocalizer.CameraDirection CAMERA_CHOICE = BACK;
     private OpenGLMatrix lastLocation = null;
-    private boolean targetVisible = false;
+    private boolean navIsFound = false;
     //mineral
     private static final String TFOD_MODEL_ASSET = "RoverRuckus.tflite";
     private static final String LABEL_GOLD_MINERAL = "Gold Mineral";
     private static final String LABEL_SILVER_MINERAL = "Silver Mineral";
+    private boolean goldIsFound = false;
 
+    //tf and vuforia
     private TFObjectDetector tfod;
     private VuforiaLocalizer vuforia;
 
@@ -73,29 +75,25 @@ public class CompAutoMode extends LinearOpMode {
         changeState(Step.readyRobot);
     }
 
-    public void readyForNextState() {
-        leftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        rightMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        leftMotor.setPower(0);
-        rightMotor.setPower(0);
-        lift.setPower(0);
-    }
-
     public Step getState(Step state) {
         return state;
     }
 
     public void moveForward(double power, double inches) {
         if (opModeIsActive()) {
-            int leftTargetPosition = lift.getCurrentPosition() + (int) (inches * wheelEncoderTicksPerInch);
+            int leftTargetPosition = leftMotor.getCurrentPosition() + (int) (inches * wheelEncoderTicksPerInch);
+            int rightTargetPosition = rightMotor.getCurrentPosition() + (int) (inches * wheelEncoderTicksPerInch);
             leftMotor.setTargetPosition(leftTargetPosition);
+            rightMotor.setTargetPosition(rightTargetPosition);
             leftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            rightMotor.setPower(power * .5);
+            rightMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            rightMotor.setPower(power);
             leftMotor.setPower(power);
             leftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
             rightMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-            while (opModeIsActive() && leftMotor.isBusy()) {
+            while (opModeIsActive() && leftMotor.isBusy() && rightMotor.isBusy()) {
                 telemetry.addData("Left Ticks", leftMotor.getCurrentPosition());
+                telemetry.addData("Right Ticks", rightMotor.getCurrentPosition());
                 telemetry.update();
             }
         }
@@ -104,15 +102,19 @@ public class CompAutoMode extends LinearOpMode {
 
     public void turnRobot(double power, double degrees) { //default turns left, set power negative to turn right
         if (opModeIsActive()) {
-            int leftTargetPosition = -1 * (leftMotor.getTargetPosition() + (int) (degrees * degreeTurnArc));
+            int leftTargetPosition = -1 * (leftMotor.getCurrentPosition() + (int) (degrees * degreeTurnArc));
+            int rightTargetPosition = (rightMotor.getCurrentPosition() + (int) (degrees * degreeTurnArc));
             leftMotor.setTargetPosition(leftTargetPosition);
+            rightMotor.setTargetPosition(rightTargetPosition);
             leftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            rightMotor.setPower(power * .5);
+            rightMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            rightMotor.setPower(power);
             leftMotor.setPower(power);
             leftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
             rightMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
             while (opModeIsActive() && leftMotor.isBusy()) {
                 telemetry.addData("Left Ticks", leftMotor.getCurrentPosition());
+                telemetry.addData("Right Ticks", rightMotor.getCurrentPosition());
                 telemetry.update();
             }
         }
@@ -150,7 +152,7 @@ public class CompAutoMode extends LinearOpMode {
                 tfod.activate();
             }
 
-            while (opModeIsActive()) {
+            while (opModeIsActive() && !goldIsFound) {
                 if (tfod != null) {
                     // getUpdatedRecognitions() will return null if no new information is available since
                     // the last time that call was made.
@@ -175,14 +177,20 @@ public class CompAutoMode extends LinearOpMode {
                                     //move
                                     telemetry.addData("Gold Mineral Position", "Left");
                                     telemetry.update();
+                                    changeState(Step.goldIsLeft);
+                                    goldIsFound = true;
                                 } else if (goldMineralX > silverMineral1X && goldMineralX > silverMineral2X) {
                                     //move
                                     telemetry.addData("Gold Mineral Position", "Right");
                                     telemetry.update();
+                                    changeState(Step.goldIsRight);
+                                    goldIsFound = true;
                                 } else {
                                     //move
                                     telemetry.addData("Gold Mineral Position", "Center");
                                     telemetry.update();
+                                    changeState(Step.goldIsCenter);
+                                    goldIsFound = true;
                                 }
                             }
                         }
@@ -197,20 +205,22 @@ public class CompAutoMode extends LinearOpMode {
         }
     }
 
-    public void findNavigationTarget() {
-
-
-
+    public void dropIdol() {
+        idol.setPosition(0);
     }
+
 
     //state machine
     public enum Step {
         readyRobot,
         moveOffLander,
         findGoldMineral,
+        goldIsCenter,
+        goldIsLeft,
+        goldIsRight,
         findNavigationTarget,
         craterSide,
-        idolSide,
+        depotSide,
         stopRobot
     }
 
@@ -235,7 +245,7 @@ public class CompAutoMode extends LinearOpMode {
         rightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         leftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         lift.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        rightMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        rightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         leftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         lift.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         leftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -316,44 +326,62 @@ public class CompAutoMode extends LinearOpMode {
         while (opModeIsActive()) {
             switch (state) {
                 case readyRobot:
-                    readyForNextState();
                     changeState(Step.moveOffLander);
                     break;
                 case moveOffLander:
                     lowerLift(.5, 33);
                     liftClaw.setPosition(1);
                     lowerLift(.5, -33);
-                    moveForward(.6, 18);
-                    readyForNextState();
                     changeState(Step.findGoldMineral);
                     break;
                 case findGoldMineral:
                     lookForGold();
-                    readyForNextState();
+                    break;
+                case goldIsLeft:
+                    turnRobot(.5, 45);
+                    turnRobot(.5, 45);
+                    changeState(Step.findNavigationTarget);
+                    break;
+                case goldIsRight:
+                    turnRobot(.5, -45);
+                    turnRobot(.5, -45);
+                    changeState(Step.findNavigationTarget);
+                    break;
+                case goldIsCenter:
+                    moveForward(.5, 6);
+                    moveForward(.5, 6);
                     changeState(Step.findNavigationTarget);
                     break;
                 case findNavigationTarget:
-                    turnRobot(.5, 90);
-                    while (opModeIsActive()) {
-
+                    turnRobot(.5, 45);
+                    moveForward(.5, 12);
+                    //start looking for nav target
+                    while (opModeIsActive() && !navIsFound) {
                     // check all the trackable target to see which one (if any) is visible.
-                    targetVisible = false;
+                    navIsFound = false;
                     for (VuforiaTrackable trackable : allTrackables) {
                         if (((VuforiaTrackableDefaultListener)trackable.getListener()).isVisible()) {
                             telemetry.addData("Visible Target", trackable.getName());
-                            targetVisible = true;
+                            navIsFound = true;
 
                             switch (trackable.getName()) {
                                 case "Blue-Rover":
                                     changeState(Step.craterSide);
+                                    navIsFound = true;
+                                    break;
                                 case "Red-Footprint":
                                     changeState(Step.craterSide);
+                                    navIsFound = true;
+                                    break;
                                 case "Front-Craters":
-                                    changeState(Step.idolSide);
+                                    changeState(Step.depotSide);
+                                    navIsFound = true;
+                                    break;
                                 case "Back-Space":
-                                    changeState(Step.idolSide);
+                                    changeState(Step.depotSide);
+                                    navIsFound = true;
+                                    break;
                             }
-
                             // getUpdatedRobotLocation() will return null if no new information is available since
                             // the last time that call was made, or if the trackable is not currently visible.
                             OpenGLMatrix robotLocationTransform = ((VuforiaTrackableDefaultListener)trackable.getListener()).getUpdatedRobotLocation();
@@ -363,25 +391,35 @@ public class CompAutoMode extends LinearOpMode {
                             break;
                         }
                     }
-
                     // Provide feedback as to where the robot is located (if we know).
-                    if (targetVisible) {
-                        // express position (translation) of robot in inches.
-                        VectorF translation = lastLocation.getTranslation();
-                        telemetry.addData("Pos (in)", "{X, Y, Z} = %.1f, %.1f, %.1f",
-                                translation.get(0) / mmPerInch, translation.get(1) / mmPerInch, translation.get(2) / mmPerInch);
-
-                        // express the rotation of the robot in degrees.
-                        Orientation rotation = Orientation.getOrientation(lastLocation, EXTRINSIC, XYZ, DEGREES);
-                        telemetry.addData("Rot (deg)", "{Roll, Pitch, Heading} = %.0f, %.0f, %.0f", rotation.firstAngle, rotation.secondAngle, rotation.thirdAngle);
-                    }
-                    else {
-                        telemetry.addData("Visible Target", "none");
-                    }
+//                    if (navIsFound) {
+//                        // express position (translation) of robot in inches.
+//                        VectorF translation = lastLocation.getTranslation();
+//                        telemetry.addData("Pos (in)", "{X, Y, Z} = %.1f, %.1f, %.1f",
+//                                translation.get(0) / mmPerInch, translation.get(1) / mmPerInch, translation.get(2) / mmPerInch);
+//
+//                        // express the rotation of the robot in degrees.
+//                        Orientation rotation = Orientation.getOrientation(lastLocation, EXTRINSIC, XYZ, DEGREES);
+//                        telemetry.addData("Rot (deg)", "{Roll, Pitch, Heading} = %.0f, %.0f, %.0f", rotation.firstAngle, rotation.secondAngle, rotation.thirdAngle);
+//                    }
+//                    else {
+//                        telemetry.addData("Visible Target", "none");
+//                    }
                     telemetry.update();
                 }
                     break;
-
+                case depotSide:
+                    turnRobot(.5,135);
+                    moveForward(.5, 18);
+                    dropIdol();
+                    changeState(Step.stopRobot);
+                    break;
+                case craterSide:
+                    turnRobot(.5, 45);
+                    moveForward(.5, 18);
+                    dropIdol();
+                    changeState(Step.stopRobot);
+                    break;
                 case stopRobot:
                     stopRobot();
                     break;
