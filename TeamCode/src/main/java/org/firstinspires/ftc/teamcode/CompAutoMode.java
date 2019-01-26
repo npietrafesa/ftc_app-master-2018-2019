@@ -60,6 +60,7 @@ public class CompAutoMode extends LinearOpMode {
     private VuforiaLocalizer vuforia;
 
 
+
     DcMotor rightMotor;
     DcMotor leftMotor;
     DcMotor lift;
@@ -151,7 +152,7 @@ public class CompAutoMode extends LinearOpMode {
             if (tfod != null) {
                 tfod.activate();
             }
-
+            long elapsedTime = System.currentTimeMillis();
             while (opModeIsActive() && !goldIsFound) {
                 if (tfod != null) {
                     // getUpdatedRecognitions() will return null if no new information is available since
@@ -185,7 +186,12 @@ public class CompAutoMode extends LinearOpMode {
                                     telemetry.update();
                                     changeState(Step.goldIsRight);
                                     goldIsFound = true;
-                                } else {
+                                }
+                                else if (elapsedTime > 3000 && !goldIsFound) {
+                                    changeState(Step.findNavigationTarget);
+                                    goldIsFound = true;
+                                }
+                                else {
                                     //move
                                     telemetry.addData("Gold Mineral Position", "Center");
                                     telemetry.update();
@@ -329,9 +335,9 @@ public class CompAutoMode extends LinearOpMode {
                     changeState(Step.moveOffLander);
                     break;
                 case moveOffLander:
-                    lowerLift(.5, 33);
+                    lowerLift(.5, 32);
                     liftClaw.setPosition(1);
-                    lowerLift(.5, -33);
+                    lowerLift(.5, -32);
                     changeState(Step.findGoldMineral);
                     break;
                 case findGoldMineral:
@@ -339,23 +345,28 @@ public class CompAutoMode extends LinearOpMode {
                     break;
                 case goldIsLeft:
                     turnRobot(.5, 45);
-                    turnRobot(.5, 45);
+                    moveForward(.5, 12);
+                    moveForward(.5, -12);
+                    turnRobot(.5, -45);
                     changeState(Step.findNavigationTarget);
                     break;
                 case goldIsRight:
                     turnRobot(.5, -45);
-                    turnRobot(.5, -45);
+                    moveForward(.5, 12);
+                    moveForward(.5, -12);
+                    turnRobot(.5, 45);
                     changeState(Step.findNavigationTarget);
                     break;
                 case goldIsCenter:
-                    moveForward(.5, 6);
-                    moveForward(.5, 6);
+                    moveForward(.5, 12);
+                    moveForward(.5, -12);
                     changeState(Step.findNavigationTarget);
                     break;
                 case findNavigationTarget:
                     turnRobot(.5, 45);
                     moveForward(.5, 12);
                     //start looking for nav target
+                    long elapsedTime = System.currentTimeMillis();
                     while (opModeIsActive() && !navIsFound) {
                     // check all the trackable target to see which one (if any) is visible.
                     navIsFound = false;
@@ -381,6 +392,9 @@ public class CompAutoMode extends LinearOpMode {
                                     changeState(Step.depotSide);
                                     navIsFound = true;
                                     break;
+                            }
+                            if (elapsedTime > 4000 && !navIsFound) {
+                                changeState(Step.stopRobot);
                             }
                             // getUpdatedRobotLocation() will return null if no new information is available since
                             // the last time that call was made, or if the trackable is not currently visible.
