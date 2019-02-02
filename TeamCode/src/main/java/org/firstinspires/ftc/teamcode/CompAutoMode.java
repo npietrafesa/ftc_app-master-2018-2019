@@ -59,8 +59,6 @@ public class CompAutoMode extends LinearOpMode {
     private TFObjectDetector tfod;
     private VuforiaLocalizer vuforia;
 
-
-
     DcMotor rightMotor;
     DcMotor leftMotor;
     DcMotor lift;
@@ -187,7 +185,7 @@ public class CompAutoMode extends LinearOpMode {
                                     changeState(Step.goldIsRight);
                                     goldIsFound = true;
                                 }
-                                else if (elapsedTime > 3000 && !goldIsFound) {
+                                else if (elapsedTime > 7000 && !goldIsFound) {
                                     changeState(Step.findNavigationTarget);
                                     goldIsFound = true;
                                 }
@@ -259,7 +257,7 @@ public class CompAutoMode extends LinearOpMode {
         telemetry.addData("Status", "Encoders Ready");
         telemetry.update();
         liftClaw.setPosition(0);
-        idol.setPosition(-.1);
+        idol.setPosition(-.5);
 
         //vuforia init
         int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
@@ -335,35 +333,44 @@ public class CompAutoMode extends LinearOpMode {
                     changeState(Step.moveOffLander);
                     break;
                 case moveOffLander:
-                    lowerLift(.5, 32);
+                    lowerLift(.5, 30);
                     liftClaw.setPosition(1);
-                    lowerLift(.5, -32);
+                    lowerLift(.5, -30);
                     changeState(Step.findGoldMineral);
                     break;
                 case findGoldMineral:
                     lookForGold();
                     break;
                 case goldIsLeft:
-                    turnRobot(.5, 45);
-                    moveForward(.5, 12);
-                    moveForward(.5, -12);
-                    turnRobot(.5, -45);
+                    telemetry.addData("Gold", "Left");
+                    telemetry.update();
+                    sleep(2000);
+                    turnRobot(.5, -20);
+                    moveForward(.5, 18);
+                    moveForward(.5, -6);
+                    turnRobot(.5, 20);
                     changeState(Step.findNavigationTarget);
                     break;
                 case goldIsRight:
-                    turnRobot(.5, -45);
-                    moveForward(.5, 12);
-                    moveForward(.5, -12);
-                    turnRobot(.5, 45);
+                    telemetry.addData("Gold", "Right");
+                    telemetry.update();
+                    sleep(2000);
+                    turnRobot(.5, 20);
+                    moveForward(.5, 18);
+                    moveForward(.5, -6);
+                    turnRobot(.5, -20);
                     changeState(Step.findNavigationTarget);
                     break;
                 case goldIsCenter:
-                    moveForward(.5, 12);
-                    moveForward(.5, -12);
+                    telemetry.addData("Gold", "Center");
+                    telemetry.update();
+                    sleep(2000);
+                    moveForward(.5, 18);
+                    moveForward(.5, -8);
                     changeState(Step.findNavigationTarget);
                     break;
                 case findNavigationTarget:
-                    turnRobot(.5, 45);
+                    turnRobot(.5, 25);
                     moveForward(.5, 12);
                     //start looking for nav target
                     long elapsedTime = System.currentTimeMillis();
@@ -393,7 +400,7 @@ public class CompAutoMode extends LinearOpMode {
                                     navIsFound = true;
                                     break;
                             }
-                            if (elapsedTime > 4000 && !navIsFound) {
+                            if (elapsedTime > 8000 && !navIsFound) {
                                 changeState(Step.stopRobot);
                             }
                             // getUpdatedRobotLocation() will return null if no new information is available since
