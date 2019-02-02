@@ -32,7 +32,7 @@ public class CompAutoMode extends LinearOpMode {
 
     //vars
     //encoders
-    private static double encoderTicksPerRevolution = 1120; //NeveRest 40 have 1120 ppr
+    private static double encoderTicksPerRevolution = 1110; //NeveRest 40 have 1120 ppr
     private static final double pi = 3.1415;
     private static double wheelDiameter = 4.0; //wheels are 4 inches in diameter
     private static double wheelGearReduction = 1.0; //gears are in a 1:1 ratio, so no change
@@ -40,7 +40,8 @@ public class CompAutoMode extends LinearOpMode {
     private static double liftGearDiameter = 1;
     private static double liftGearReduction = .5;
     private static final double liftEncoderTicksPerInch = ((encoderTicksPerRevolution * liftGearReduction) / (liftGearDiameter * pi));
-    private static final double degreeTurnArc = (180 * .2618) / (pi * 15); //how many inches the wheel will travel in one degree
+    private static double robotDiameter = 15; //distance in inches between the two wheels
+    private static final double degreeTurnArc = (1/360)*(2*pi*(wheelDiameter/2))*(wheelEncoderTicksPerInch); //how many inches the wheel will travel in one degree
     //nav
     private static final String VUFORIA_KEY = "AXijc37/////AAAAGR8Zcpk0OkqfpylpmW5pYTAUkEXgtaFwGrLNLr0pw2tXVyNQrJxgegKHKQkDqhX4BfvI/i8II0jj9TXN1WPENa4GY/VYLsafTjuTTSJHctF5OCHh/XH13hEAsGDzW6tFE6SOf8hMHJpKWcv9neasODelhb5jedgNmgYgg9PCOpKPtn66pjIIZoK4XGvj8gH1+sx9WO5Bl3zwDx6IJPDPilKCQ8hhoWyN6g4yck1/ty7dxwx7DDWQ307lSlcg6DINlMaYsR4CIptbTzNE6SSahJPIAL6isd5pYK8iNI2jYyNLRARlTMo1Ps1+KAVUuDo1GI+vvsg/iGCdkjLfZ2qEf415rfqMWgsEAv3dsZs3sdbp";
     private static final float mmPerInch        = 25.4f;
@@ -173,24 +174,24 @@ public class CompAutoMode extends LinearOpMode {
                             }
                             if (goldMineralX != -1 && silverMineral1X != -1 && silverMineral2X != -1) {
                                 if (goldMineralX < silverMineral1X && goldMineralX < silverMineral2X) {
-                                    //move
+                                    //left
                                     telemetry.addData("Gold Mineral Position", "Left");
                                     telemetry.update();
                                     changeState(Step.goldIsLeft);
                                     goldIsFound = true;
                                 } else if (goldMineralX > silverMineral1X && goldMineralX > silverMineral2X) {
-                                    //move
+                                    //right
                                     telemetry.addData("Gold Mineral Position", "Right");
                                     telemetry.update();
                                     changeState(Step.goldIsRight);
                                     goldIsFound = true;
                                 }
-                                else if (elapsedTime > 7000 && !goldIsFound) {
-                                    changeState(Step.findNavigationTarget);
-                                    goldIsFound = true;
-                                }
+//                                else if (elapsedTime > 10000 && !goldIsFound) {
+//                                    changeState(Step.findNavigationTarget);
+//                                    goldIsFound = true;
+//                                }
                                 else {
-                                    //move
+                                    //center
                                     telemetry.addData("Gold Mineral Position", "Center");
                                     telemetry.update();
                                     changeState(Step.goldIsCenter);
@@ -342,36 +343,29 @@ public class CompAutoMode extends LinearOpMode {
                     lookForGold();
                     break;
                 case goldIsLeft:
-                    telemetry.addData("Gold", "Left");
-                    telemetry.update();
-                    sleep(2000);
-                    turnRobot(.5, -20);
-                    moveForward(.5, 18);
-                    moveForward(.5, -6);
-                    turnRobot(.5, 20);
+                    moveForward(.5, 6);
+                    turnRobot(.5, -10);
+                    moveForward(.5, 20);
+                    moveForward(.5, -14);
+                    turnRobot(.5, 10);
                     changeState(Step.findNavigationTarget);
                     break;
                 case goldIsRight:
-                    telemetry.addData("Gold", "Right");
-                    telemetry.update();
-                    sleep(2000);
-                    turnRobot(.5, 20);
-                    moveForward(.5, 18);
-                    moveForward(.5, -6);
-                    turnRobot(.5, -20);
+                    moveForward(.5, 6);
+                    turnRobot(.5, 10);
+                    moveForward(.5, 20);
+                    moveForward(.5, -14);
+                    turnRobot(.5, -10);
                     changeState(Step.findNavigationTarget);
                     break;
                 case goldIsCenter:
-                    telemetry.addData("Gold", "Center");
-                    telemetry.update();
-                    sleep(2000);
-                    moveForward(.5, 18);
-                    moveForward(.5, -8);
+                    moveForward(.5, 26);
+                    moveForward(.5, -14);
                     changeState(Step.findNavigationTarget);
                     break;
                 case findNavigationTarget:
-                    turnRobot(.5, 25);
-                    moveForward(.5, 12);
+                    turnRobot(.5, 20);
+                    moveForward(.5, 36);
                     //start looking for nav target
                     long elapsedTime = System.currentTimeMillis();
                     while (opModeIsActive() && !navIsFound) {
@@ -400,9 +394,9 @@ public class CompAutoMode extends LinearOpMode {
                                     navIsFound = true;
                                     break;
                             }
-                            if (elapsedTime > 8000 && !navIsFound) {
-                                changeState(Step.stopRobot);
-                            }
+//                            if (elapsedTime > 8000 && !navIsFound) {
+//                                changeState(Step.stopRobot);
+//                            }
                             // getUpdatedRobotLocation() will return null if no new information is available since
                             // the last time that call was made, or if the trackable is not currently visible.
                             OpenGLMatrix robotLocationTransform = ((VuforiaTrackableDefaultListener)trackable.getListener()).getUpdatedRobotLocation();
