@@ -151,7 +151,7 @@ public class CompAutoMode extends LinearOpMode {
             if (tfod != null) {
                 tfod.activate();
             }
-            long elapsedTime = System.currentTimeMillis();
+//            long elapsedTime = System.currentTimeMillis();
             while (opModeIsActive() && !goldIsFound) {
                 if (tfod != null) {
                     // getUpdatedRecognitions() will return null if no new information is available since
@@ -336,7 +336,7 @@ public class CompAutoMode extends LinearOpMode {
                 case moveOffLander:
                     lowerLift(.5, 30);
                     liftClaw.setPosition(1);
-                    lowerLift(.5, -30);
+//                    lowerLift(.5, -30);
                     changeState(Step.findGoldMineral);
                     break;
                 case findGoldMineral:
@@ -344,18 +344,18 @@ public class CompAutoMode extends LinearOpMode {
                     break;
                 case goldIsLeft:
                     moveForward(.5, 6);
-                    turnRobot(.5, -10);
-                    moveForward(.5, 20);
+                    turnRobot(.5, -7);
+                    moveForward(.5, 24);
                     moveForward(.5, -14);
-                    turnRobot(.5, 10);
+                    turnRobot(.5, 7);
                     changeState(Step.findNavigationTarget);
                     break;
                 case goldIsRight:
                     moveForward(.5, 6);
-                    turnRobot(.5, 10);
-                    moveForward(.5, 20);
+                    turnRobot(.5, 7);
+                    moveForward(.5, 24);
                     moveForward(.5, -14);
-                    turnRobot(.5, -10);
+                    turnRobot(.5, -7);
                     changeState(Step.findNavigationTarget);
                     break;
                 case goldIsCenter:
@@ -364,8 +364,8 @@ public class CompAutoMode extends LinearOpMode {
                     changeState(Step.findNavigationTarget);
                     break;
                 case findNavigationTarget:
-                    turnRobot(.5, 20);
-                    moveForward(.5, 36);
+//                    turnRobot(.5, 20);
+//                    moveForward(.5, 36);
                     //start looking for nav target
                     long elapsedTime = System.currentTimeMillis();
                     while (opModeIsActive() && !navIsFound) {
@@ -424,15 +424,15 @@ public class CompAutoMode extends LinearOpMode {
                 }
                     break;
                 case depotSide:
-                    turnRobot(.5,135);
-                    moveForward(.5, 18);
-                    dropIdol();
+//                    turnRobot(.5,135);
+//                    moveForward(.5, 18);
+//                    dropIdol();
                     changeState(Step.stopRobot);
                     break;
                 case craterSide:
-                    turnRobot(.5, 45);
-                    moveForward(.5, 18);
-                    dropIdol();
+//                    turnRobot(.5, 45);
+//                    moveForward(.5, 18);
+//                    dropIdol();
                     changeState(Step.stopRobot);
                     break;
                 case stopRobot:
