@@ -22,7 +22,7 @@ public class TeleOpMode extends OpMode {
     Servo claw;
     Servo idol;
     CRServo armClaw;
-    Servo slide;
+    CRServo slide;
     CRServo sweeper;
 
     @Override
@@ -35,11 +35,11 @@ public class TeleOpMode extends OpMode {
         claw = hardwareMap.servo.get("Claw");
         idol = hardwareMap.servo.get("Idol");
         armClaw = hardwareMap.crservo.get("ArmClaw");
-        slide = hardwareMap.servo.get("Slide");
+        slide = hardwareMap.crservo.get("Slide");
         sweeper = hardwareMap.crservo.get("Sweeper");
         claw.setPosition(0);
         idol.setPosition(.9);
-        slide.setPosition(.5);
+ //       slide.setPosition(.5);
     }
     @Override
     public void loop() {
@@ -55,27 +55,16 @@ public class TeleOpMode extends OpMode {
 
         lift.setPower(-1*(gamepad2.left_stick_y));
         arm.setPower(gamepad2.right_stick_y);
-//        double position = 0;
-        if (gamepad2.right_trigger > 0.5) {
-            slide.setPosition(gamepad2.right_trigger);
-//            position = slide.getPosition();
+        if (gamepad2.right_trigger > 0.2) {
+            slide.setPower(.2);
         }
-//        else {
-//            slide.setPosition(.5);
-//        }
-        if (gamepad2.left_trigger > 0.5) {
-            slide.setPosition(-1* (gamepad2.left_trigger));
- //           position = slide.getPosition();
+        else if (gamepad2.left_trigger > 0.2) {
+            slide.setPower(-.2);
         }
-//        else {
-//            slide.setPosition(.5);
-//        }
-//        if (gamepad2.right_trigger == 0) {
-////            slide.setPosition(position);
-//        }
-//        if (gamepad2.left_trigger == 0) {
-////            slide.setPosition(position);
-//        }
+        else {
+            slide.setPower(0);
+        }
+
 
         if (gamepad2.a) {
             claw.setPosition(-.5);
@@ -108,7 +97,7 @@ public class TeleOpMode extends OpMode {
         telemetry.addData("Lift", lift.getPower());
         telemetry.addData("Arm", arm.getPower());
         telemetry.addData("armClaw", armClaw.getPower());
-        telemetry.addData("Slide", slide.getPosition());
+ //       telemetry.addData("Slide", slide.getPosition());
         telemetry.addData("Sweeper", sweeper.getPower());
         telemetry.addData("Claw", claw.getPosition());
         telemetry.addData("Idol", idol.getPosition());

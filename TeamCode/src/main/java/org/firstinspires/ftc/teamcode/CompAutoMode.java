@@ -32,7 +32,7 @@ public class CompAutoMode extends LinearOpMode {
 
     //vars
     //encoders
-    private static double encoderTicksPerRevolution = 1110; //NeveRest 40 have 1120 ppr
+    private static double encoderTicksPerRevolution = 1110; //NeveRest 40 have 1120 ppr (ours have 1110 however)
     private static final double pi = 3.1415;
     private static double wheelDiameter = 4.0; //wheels are 4 inches in diameter
     private static double wheelGearReduction = 1.0; //gears are in a 1:1 ratio, so no change
@@ -41,7 +41,7 @@ public class CompAutoMode extends LinearOpMode {
     private static double liftGearReduction = .5;
     private static final double liftEncoderTicksPerInch = ((encoderTicksPerRevolution * liftGearReduction) / (liftGearDiameter * pi));
     private static double robotDiameter = 15; //distance in inches between the two wheels
-    private static final double degreeTurnArc = (1/360)*(2*pi*(wheelDiameter/2))*(wheelEncoderTicksPerInch); //how many inches the wheel will travel in one degree
+    private static final double degreeTurnArc = (1/360)*(2*pi*(robotDiameter/2))*(wheelEncoderTicksPerInch); //how many inches the wheel will travel in one degree
     //nav
     private static final String VUFORIA_KEY = "AXijc37/////AAAAGR8Zcpk0OkqfpylpmW5pYTAUkEXgtaFwGrLNLr0pw2tXVyNQrJxgegKHKQkDqhX4BfvI/i8II0jj9TXN1WPENa4GY/VYLsafTjuTTSJHctF5OCHh/XH13hEAsGDzW6tFE6SOf8hMHJpKWcv9neasODelhb5jedgNmgYgg9PCOpKPtn66pjIIZoK4XGvj8gH1+sx9WO5Bl3zwDx6IJPDPilKCQ8hhoWyN6g4yck1/ty7dxwx7DDWQ307lSlcg6DINlMaYsR4CIptbTzNE6SSahJPIAL6isd5pYK8iNI2jYyNLRARlTMo1Ps1+KAVUuDo1GI+vvsg/iGCdkjLfZ2qEf415rfqMWgsEAv3dsZs3sdbp";
     private static final float mmPerInch        = 25.4f;
@@ -100,11 +100,11 @@ public class CompAutoMode extends LinearOpMode {
     }
 
 
-    public void turnRobot(double power, double degrees) { //default turns left, set power negative to turn right
+    public void turnRobot(double power, double degrees) { //default turns left, set degrees negative to turn right
         if (opModeIsActive()) {
-            int leftTargetPosition = -1 * (leftMotor.getCurrentPosition() + (int) (degrees * degreeTurnArc));
+            int leftTargetPosition = (leftMotor.getCurrentPosition() + (int) (degrees * degreeTurnArc));
             int rightTargetPosition = (rightMotor.getCurrentPosition() + (int) (degrees * degreeTurnArc));
-            leftMotor.setTargetPosition(leftTargetPosition);
+            leftMotor.setTargetPosition(-leftTargetPosition);
             rightMotor.setTargetPosition(rightTargetPosition);
             leftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             rightMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -344,10 +344,10 @@ public class CompAutoMode extends LinearOpMode {
                     break;
                 case goldIsLeft:
                     moveForward(.5, 6);
-                    turnRobot(.5, -7);
+                    turnRobot(.5, 14);
                     moveForward(.5, 24);
                     moveForward(.5, -14);
-                    turnRobot(.5, 7);
+                    //turnRobot(.5, 7);
                     changeState(Step.findNavigationTarget);
                     break;
                 case goldIsRight:
@@ -355,7 +355,7 @@ public class CompAutoMode extends LinearOpMode {
                     turnRobot(.5, 7);
                     moveForward(.5, 24);
                     moveForward(.5, -14);
-                    turnRobot(.5, -7);
+                    turnRobot(-.5, -7);
                     changeState(Step.findNavigationTarget);
                     break;
                 case goldIsCenter:
